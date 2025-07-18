@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Luxury Color Palette Generator</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 2em auto; text-align: center; }
+    h1 { margin-bottom: 1em; }
+    .controls { display: flex; justify-content: center; gap: 1em; flex-wrap: wrap; margin-bottom: 1em; }
+    .controls > * { flex: 1 1 auto; min-width: 120px; }
+    .palette { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.5em; }
+    .swatch { position: relative; padding-top: 100%; cursor: pointer; border-radius: 4px; overflow: hidden; }
+    .swatch .color { position: absolute; inset: 0; }
+    .swatch .label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      text-align: center; font-size: 0.9em; background: rgba(255,255,255,0.7);
+      padding: 0.2em; backdrop-filter: blur(4px);
+    }
+    button, input[type=color], select, input[type=text] { padding: 0.5em 1em; font-size: 1em; border-radius: 4px; }
+    button { background: #222; color: #fff; border: none; }
+    button:hover { background: #444; }
+    #copiedMsg { position: fixed; bottom: 1em; left: 50%; transform: translateX(-50%);
+               background: #333; color: #fff; padding: 0.5em 1em; border-radius: 4px; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Luxury Palette Generator</h1>
+  <div class="controls">
+    <input type="color" id="baseColor" value="#4a7a6f" />
+    <input type="text" id="baseHex" value="#4a7a6f" maxlength="7" />
+    <select id="harmony">
+      <option value="monochrome">Monochrome</option>
+      <option value="complementary" selected>Complementary</option>
+      <option value="analogous">Analogous</option>
+      <option value="triadic">Triadic</option>
+      <option value="split">Split-Complementary</option>
+      <option value="tetradic">Tetradic</option>
+    </select>
+    <button id="nextBtn">Generate Palette</button>
+  </div>
+  <div class="palette" id="palette"></div>
+  <div class="copied" id="copiedMsg">Copied!</div>
+  <script>
+    // Sync color input and hex field
+    const colorInput = document.getElementById('baseColor');
+    const hexInput   = document.getElementById('baseHex');
+    colorInput.oninput = () => { hexInput.value = colorInput.value; };
+    hexInput.oninput   = () => {
+      const v = hexInput.value;
+      if(/^#[0-9A-Fa-f]{6}$/.test(v)) colorInput.value = v;
+    };
+
+    // Hex <-> HSL utilities
+    function hexToHSL(H) {
+      let r=0,g=0,b=0;
+      if(H.length===4) [r,g,b]=H.slice(1).split('').map(c=>'0x'+c+c);
+      else [r,g,b]=[H.slice(1,3),H.slice(3,5),H.slice(5,7)].map(c=>'0x'+c);
+      r/=255; g/=255; b/=255;
+      const cmin=Math.min(r,g,b), cmax=Math.max(r,g,b), delta=cmax-cmin;
+      let h=0, s=0, l=(cmax+cmin)/2;
+      if(delta){
+        s=delta/(1-Math.abs(2*l-1));
+        switch(cmax){
+          case r: h=((g-b)/delta)%6; break;
+          case g: h=(b-r)/delta+2; break;
+          case b: h=(r-g)/delta+4; break;
+        }
+        h=Math.round(h*60); if(h<0) h+=360;
+      }
+      return {h,s,l};
+    }
+    function HSLToHex(h,s,l){
+      s=Math.max(0,Math.min(s,1)); l=Math.max(0,Math.min(l,1));
+      const c=(1-Math.abs(2*l-1))*s;
+      const x=c*(1-Math.abs((h/60)%2-1));
+      const m=l-c/2;
+      let [r,g,b]=[0,0,0];
+      if(h<60) [r,g,b]=[c,x,0]; else if(h<120) [r,g,b]=[x,c,0];
+      else if(h<180) [r,g,b]=[0,c,x]; else if(h<240) [r,g,b]=[0,x,c];
+      else if(h<300) [r,g,b]=[x,0,c]; else [r,g,b]=[c,0,x];
+      r=Math.round((r+m)*255); g=Math.round((g+m)*255); b=Math.round((b+m)*255);
+      return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    }
+
+    // Palette generators for harmony types
+    function generateHarmony({h,s,l}, type) {
+      const angles = [];
+      switch(type) {
+        case 'complementary': angles.push(0,180); break;
+        case 'analogous': angles.push(0,-30,30); break;
+        case 'triadic': angles.push(0,120,240); break;
+        case 'split': angles.push(0,150,210); break;
+        case 'tetradic': angles.push(0,90,180,270); break;
+        default: angles.push(0);
+      }
+      return angles.map(a=>HSLToHex((h+a+360)%360,s,l));
+    }
+    function generatePalette(baseHex,type) {
+      const hsl=hexToHSL(baseHex);
+      let main=generateHarmony(hsl,type);
+      while(main.length<5) main.push(HSLToHex(hsl.h,hsl.s,hsl.l + (main.length - 2)*0.1));
+      return main.slice(0,5);
+    }
+    function renderPalette(colors) {
+      const container=document.getElementById('palette'); container.innerHTML='';
+      colors.forEach(col=>{
+        const div=document.createElement('div'); div.className='swatch';
+        div.innerHTML=`<div class="color" style="background:${col}"></div><div class="label">${col}</div>`;
+        div.onclick=()=>{
+          navigator.clipboard.writeText(col).then(()=>{
+            const msg=document.getElementById('copiedMsg'); msg.style.display='block';
+            setTimeout(()=>msg.style.display='none',1000);
+          });
+        };
+        container.appendChild(div);
+      });
+    }
+    document.getElementById('nextBtn').onclick=()=>{
+      const base=hexInput.value;
+      const type=document.getElementById('harmony').value;
+      renderPalette(generatePalette(base,type));
+    };
+    // initial
+    renderPalette(generatePalette(hexInput.value, document.getElementById('harmony').value));
+  </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSS Animation Playground</title>
+  <style>
+    body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 2em; background: #f0f0f0; }
+    h1 { margin-bottom: 1em; }
+    #playground { width: 300px; height: 200px; background: #222; margin-bottom: 1em; position: relative; overflow: hidden; }
+    #code { width: 90%; background: #1e1e1e; color: #dcdcdc; padding: 1em; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+    button { padding: 0.5em 1em; margin-bottom: 1em; border: none; background: #007acc; color: white; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #005fa3; }
+  </style>
+</head>
+<body>
+  <h1>CSS Animation Playground</h1>
+  <button id="genBtn">Generate Animation</button>
+  <div id="playground"></div>
+  <div id="code"></div>
+
+  <script>
+    const playground = document.getElementById('playground');
+    const codeBox = document.getElementById('code');
+    const genBtn = document.getElementById('genBtn');
+
+    function randomColor() {
+      return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+    }
+
+    function generate() {
+      // Clear previous
+      playground.innerHTML = '';
+      const animName = 'anim' + Date.now();
+      const bg = randomColor();
+      const fg = randomColor();
+      const duration = (Math.random()*5+3).toFixed(2) + 's';
+
+      // Generate keyframes for background gradient animation
+      const angle1 = Math.floor(Math.random()*360);
+      const angle2 = (angle1 + 180) % 360;
+      const keyframes = `@keyframes ${animName} {
+  0% { background: linear-gradient(${angle1}deg, ${bg}, ${fg}); }
+  50% { background: linear-gradient(${angle2}deg, ${fg}, ${bg}); }
+  100% { background: linear-gradient(${angle1}deg, ${bg}, ${fg}); }
+}`;
+
+      // Apply animation
+      playground.style.animation = `${animName} ${duration} ease-in-out infinite`;
+
+      // Inject style
+      let styleTag = document.getElementById('playStyle');
+      if (styleTag) styleTag.remove();
+      styleTag = document.createElement('style');
+      styleTag.id = 'playStyle';
+      styleTag.textContent = keyframes;
+      document.head.appendChild(styleTag);
+
+      // Show code
+      codeBox.textContent = `${keyframes}
+
+#playground {
+  animation: ${animName} ${duration} ease-in-out infinite;
+}`;
+    }
+
+    genBtn.onclick = generate;
+    // initial
+    generate();
+  </script>
+</body>
+</html>

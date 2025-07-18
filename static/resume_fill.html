@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resume Builder</title>
+  <script type="module">
+    import { PDFDocument, StandardFonts, rgb } from 'https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js';
+
+    async function fillAndDownload() {
+      // 1) Fetch your template PDF
+      const url = '/static/template.pdf';
+      const arrayBuffer = await fetch(url).then(r => r.arrayBuffer());
+
+      // 2) Load it
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      const page   = pdfDoc.getPage(0);
+      const { width, height } = page.getSize();
+
+      // 3) Embed a matching font
+      const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      // 4) Gather user inputs
+      const data = {
+        name:        document.getElementById('inpName').value,
+        contact:     document.getElementById('inpContact').value,
+        summary:     document.getElementById('inpSummary').value,
+        skills:      document.getElementById('inpSkills').value,
+        experience:  document.getElementById('inpExperience').value,
+        education:   document.getElementById('inpEducation').value,
+      };
+
+      // 5) Draw each text block at exact coordinates (in PDF points)
+      //    You must tweak these X,Y until they exactly align with your template PDF.
+      page.drawText(data.name, {
+        x: 50, y: height - 80,
+        size: 20, font: helveticaBold, color: rgb(0,0,0),
+      });
+      page.drawText(data.contact, {
+        x: 50, y: height - 110,
+        size: 10, font: helvetica, color: rgb(0.2,0.2,0.2),
+      });
+
+      // Multi-line text helper
+      function drawMultiline(text, x, y, options) {
+        const { size, font, lineHeight } = options;
+        const lines = text.split('\n');
+        lines.forEach((line, i) => {
+          page.drawText(line, {
+            x, y: y - i * lineHeight,
+            size, font, color: rgb(0,0,0),
+          });
+        });
+      }
+
+      // Summary block
+      drawMultiline(data.summary, 50, height - 150, {
+        size: 11, font: helvetica, lineHeight: 14,
+      });
+
+      // Skills block
+      drawMultiline(data.skills, 50, height - 230, {
+        size: 11, font: helvetica, lineHeight: 14,
+      });
+
+      // Experience block
+      drawMultiline(data.experience, 50, height - 350, {
+        size: 11, font: helvetica, lineHeight: 14,
+      });
+
+      // Education block
+      drawMultiline(data.education, 50, height - 550, {
+        size: 11, font: helvetica, lineHeight: 14,
+      });
+
+      // 6) Serialize & download
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'resume_filled.pdf';
+      link.click();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('btnDownload').onclick = fillAndDownload;
+    });
+  </script>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 2em auto; }
+    label { display: block; margin-top: 1em; font-weight: bold; }
+    input, textarea { width: 100%; padding: .5em; font-size: 1em; }
+    textarea { height: 4em; }
+    button { margin-top: 1.5em; padding: .75em 1.5em; font-size: 1em; background: #222; color: #fff; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Resume Builder</h1>
+
+  <label for="inpName">Name</label>
+  <input id="inpName" value="Nouman Tayyab"/>
+
+  <label for="inpContact">Contact</label>
+  <input id="inpContact" value="Lahore, Pakistan | +92 306 9793576 | noumantayyab.dev@gmail.com | linkedin.com/in/nouman-tayyab/"/>
+
+  <label for="inpSummary">Summary</label>
+  <textarea id="inpSummary">WordPress Developer with 3 years of experience specializing in web development, graphic design, and SEO optimization.</textarea>
+
+  <label for="inpSkills">Technical Skills</label>
+  <textarea id="inpSkills">• Web Development: WordPress, HTML, CSS, JavaScript, PHP\n• Design Tools: Photoshop, Illustrator\n• SEO & Analytics: On-Page SEO, Google Analytics\n• Content Mgmt: Elementor, WooCommerce, WPBakery\n• Version Control: Git, GitHub\n• Soft Skills: Communication, Project Management, Problem-Solving</textarea>
+
+  <label for="inpExperience">Professional Experience</label>
+  <textarea id="inpExperience">Website Developer, JOMEJOURNEY — Singapore (Dec 2023–Present)\n• Spearhead development of 60+ responsive, user-centric WordPress websites…\n\nFreelance WordPress Developer — Lahore, Pakistan (Jan 2019–Present)\n• Developed & customized themes/plugins; improved SEO & performance.</textarea>
+
+  <label for="inpEducation">Education & Honors</label>
+  <textarea id="inpEducation">University of Lahore, BSc in Software Engineering (Apr 2019–2023)\nIslamia Government Science College, Intermediate (Jan 2017–2019)\nVideography Competition Winner — UET (July 2021)</textarea>
+
+  <button id="btnDownload">Download PDF</button>
+</body>
+</html>

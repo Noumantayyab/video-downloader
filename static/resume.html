@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resume Builder</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    /* Container matches PDF page size and margins and uses PDF as background */
+    #resume-container {
+      position: relative;
+      width: 8.5in;
+      height: 11in;
+      margin: 1em auto;
+      background: url('/static/resume_template.png') no-repeat;
+      background-size: cover;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      color: #222;
+    }
+    /* Editable overlays */
+    .field {
+      position: absolute;
+      white-space: pre-wrap;
+      overflow: hidden;
+      cursor: text;
+    }
+    /* Name */
+    #name { top: 1.0in; left: 0.7in; width: 6.5in; font-size: 24pt; font-weight: bold; }
+    /* Contact */
+    #contact { top: 1.4in; left: 0.7in; width: 6.5in; font-size: 10pt; color: #555; }
+    /* Summary */
+    #summary { top: 2.0in; left: 0.7in; width: 6.5in; font-size: 12pt; }
+    /* Skills */
+    #skills { top: 3.0in; left: 0.7in; width: 6.5in; font-size: 12pt; }
+    /* Experience */
+    #exp { top: 4.2in; left: 0.7in; width: 6.5in; font-size: 12pt; }
+    /* Education */
+    #edu { top: 7.0in; left: 0.7in; width: 6.5in; font-size: 12pt; }
+    /* Editable focus */
+    .field[contenteditable]:focus { outline: 2px dashed #666; }
+    /* Download button */
+    #downloadBtn { display: block; margin: 1em auto; padding: 0.5em 1em; background: #222; color: white; border: none; cursor: pointer; }
+  </style>
+</head>
+<body>
+   <p><a href="/thumbnail">→ YouTube Thumbnail Downloader</a></p>
+  <p><a href="/profile">→ Profile Picture Resizer</a></p>
+  <p><a href="/palette">→ Color Palette Generator</a></p>
+  <p><a href="/resume_fill">Resume Builder</a></p>
+  <p><a href="/css_playground">→ CSS Animation Playground</a></p>
+
+  <div id="resume-container">
+    <div id="name" class="field" contenteditable="true">Nouman Tayyab</div>
+    <div id="contact" class="field" contenteditable="true">Lahore, Pakistan | +92 306 9793576 | noumantayyab.dev@gmail.com | linkedin.com/in/nouman-tayyab/</div>
+
+    <div id="summary" class="field" contenteditable="true">WordPress Developer with 3 years of experience specializing in web development, graphic design, and SEO optimization.
+    </div>
+
+    <div id="skills" class="field" contenteditable="true">• Web Development: WordPress, HTML, CSS, JavaScript, PHP
+• Design Tools: Adobe Photoshop, Adobe Illustrator
+• SEO & Analytics: On-Page SEO, Google Analytics, Keyword Optimization
+• Content Management: Elementor, WooCommerce, WPBakery
+• Version Control: Git, GitHub
+• Soft Skills: Client Communication, Project Management, Problem-Solving
+    </div>
+
+    <div id="exp" class="field" contenteditable="true">
+Website Developer, JOMEJOURNEY –– Singapore (Dec 2023–Present)
+• Spearhead development of 60+ responsive, user-centric WordPress websites...
+
+Freelance WordPress Developer –– Lahore, Pakistan (Jan 2019–Present)
+• Developed and customized WordPress themes/plugins...
+    </div>
+
+    <div id="edu" class="field" contenteditable="true">University of Lahore, BSc in Software Engineering (Apr 2019–2023)
+Islamia Government Science College, Intermediate (Jan 2017–2019)
+Videography Competition Winner (July 2021) — UET
+    </div>
+  </div>
+  <button id="downloadBtn">Download PDF</button>
+  <script>
+    document.getElementById('downloadBtn').onclick = () => {
+      const element = document.getElementById('resume-container');
+      const opt = {
+        filename: 'resume.pdf',
+        jsPDF: { unit: 'in', format: [8.5,11], compress: true }
+      };
+      html2pdf().set(opt).from(element).save();
+    };
+  </script>
+</body>
+</html>

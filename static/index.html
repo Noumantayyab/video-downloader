@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Video Downloader</title>
+  <style>
+    .tabs { display: flex; margin-bottom: 1em; }
+    .tab { padding: 0.5em 1em; cursor: pointer; border: 1px solid #ccc; border-bottom: none; }
+    .tab.active { background: #f0f0f0; font-weight: bold; }
+    .pane { display: none; border: 1px solid #ccc; padding: 1em; }
+    .pane.active { display: block; }
+
+    /* —— BASE & DARK THEME —— */
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+      line-height: 1.6;
+    }
+    a { color: #80cbc4; text-decoration: none; }
+    a:hover { color: #4db6ac; }
+
+    /* —— TABS —— */
+    .tabs {
+      display: flex; margin: 1rem 0; border-bottom: 2px solid #333;
+    }
+    .tab {
+      padding: 0.5rem 1rem; cursor: pointer;
+      background: #1e1e1e; margin-right: 0.25rem;
+      border-top-left-radius: 4px; border-top-right-radius: 4px;
+      border: 1px solid #333; border-bottom: none;
+      transition: background 0.2s;
+    }
+    .tab.active { background: #292929; font-weight: bold; color: #fff; }
+    .pane {
+      display: none; padding: 1rem;
+      border: 1px solid #333; background: #1c1c1c;
+      border-radius: 0 4px 4px 4px;
+    }
+    .pane.active { display: block; }
+
+    /* —— FORMS & INPUTS —— */
+    form {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    form input[type="text"] {
+      flex: 1 1 300px; padding: 0.5rem;
+      background: #2a2a2a; border: 1px solid #444;
+      border-radius: 4px; color: #e0e0e0;
+    }
+    form button {
+      position: relative;
+      padding: 0.5rem 1rem 0.5rem 2.5rem;
+      background: #4db6ac; border: none;
+      border-radius: 4px; font-weight: bold;
+      cursor: pointer; color: #121212;
+      overflow: hidden; transition: background 0.2s;
+    }
+    form button:hover { background: #26a69a; }
+
+    /* Loading Spinner */
+    @keyframes spinner { to { transform: rotate(360deg); } }
+    button.loading::before {
+      content: "";
+      box-sizing: border-box;
+      position: absolute;
+      top: 50%; left: 1rem;
+      width: 1rem; height: 1rem;
+      margin-top: -0.5rem;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: rgba(0,0,0,0.6);
+      border-radius: 50%;
+      animation: spinner 0.6s linear infinite;
+    }
+
+    /* —— RESPONSIVE —— */
+    @media (max-width: 640px) {
+      .tabs { flex-direction: column; }
+      .tab { margin-bottom: 0.25rem; }
+      form { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <p><a href="/thumbnail">→ YouTube Thumbnail Downloader</a></p>
+  <p><a href="/profile">→ Profile Picture Resizer</a></p>
+  <p><a href="/palette">→ Color Palette Generator</a></p>
+  <p><a href="/resume_fill">Resume Builder</a></p>
+  <p><a href="/css_playground">→ CSS Animation Playground</a></p>
+
+  <h1>Video Downloader</h1>
+  <p>Kindly refresh the page after each downloading</p>
+  <div class="tabs">
+    <div class="tab active"    data-target="youtube">YouTube</div>
+    <div class="tab"           data-target="instagram">Instagram</div>
+    <div class="tab"           data-target="twitter">X (Twitter)</div>
+    <div class="tab"           data-target="facebook">Facebook</div>
+    <div class="tab"           data-target="tiktok">TikTok</div>
+    <div class="tab"           data-target="other">Other</div>
+  </div>
+
+  <div id="youtube" class="pane active">
+    <form id="ytForm">
+      <input type="text" id="ytUrl" placeholder="Paste YouTube URL here" size="60"/>
+      <button type="submit">Download</button>
+    </form>
+  </div>
+
+  <div id="instagram" class="pane">
+    <form id="igForm">
+      <input type="text" id="igUrl" placeholder="Paste Instagram URL here" size="60"/>
+      <button type="submit">Download</button>
+    </form>
+  </div>
+
+  <div id="twitter" class="pane">
+    <form id="twForm">
+      <input type="text" id="twUrl" placeholder="Paste X (Twitter) URL here" size="60"/>
+      <button type="submit">Download</button>
+    </form>
+  </div>
+
+  <div id="facebook" class="pane">
+    <form id="fbForm">
+      <input type="text" id="fbUrl" placeholder="Paste Facebook video URL here" size="60"/>
+      <button type="submit">Download</button>
+    </form>
+  </div>
+
+  <div id="tiktok" class="pane">
+    <form id="ttForm">
+      <input type="text" id="ttUrl" placeholder="Paste TikTok URL here" size="60"/>
+      <button type="submit">Download</button>
+    </form>
+  </div>
+
+  <div id="other" class="pane">
+    <h2>Other Video Downloader</h2>
+    <div>
+      <input type="text" id="otherUrl" placeholder="Paste any page URL here" size="60"/>
+      <button type="button" id="probeBtn">Find Videos</button>
+    </div>
+    <div id="videoList" style="margin-top:1em;"></div>
+  </div>
+
+  <!-- Hidden iframe for downloads -->
+  <iframe id="downloadFrame" style="display:none;"></iframe>
+
+  <div id="resume_fill" class="pane">
+    <iframe src="/resume_fill" style="width:100%; height:800px; border:none;"></iframe>
+  </div>
+
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll('.tab, .pane').forEach(el => el.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.target).classList.add('active');
+      };
+    });
+
+    // Helper: download through hidden iframe, clear spinner on load
+    function addLoadingWithIframe(formEl, buildUrl) {
+      const iframe = document.getElementById('downloadFrame');
+      const btn    = formEl.querySelector('button');
+      const origText = btn.textContent;
+
+      formEl.addEventListener('submit', e => {
+        e.preventDefault();
+        const input = formEl.querySelector('input');
+        const url   = input.value.trim();
+        if (!url) return alert('Enter a URL');
+
+        // start spinner
+        btn.disabled = true;
+        btn.classList.add('loading');
+        btn.textContent = '';
+
+        // when download completes in iframe, reset button
+        iframe.onload = () => {
+          btn.disabled = false;
+          btn.classList.remove('loading');
+          btn.textContent = origText;
+          iframe.onload = null;
+        };
+
+        // trigger download
+        iframe.src = buildUrl(url);
+      });
+    }
+
+    // Attach to each download form
+    addLoadingWithIframe(
+      document.getElementById('ytForm'),
+      url => `/download?url=${encodeURIComponent(url)}`
+    );
+    addLoadingWithIframe(
+      document.getElementById('igForm'),
+      url => `/download_instagram?url=${encodeURIComponent(url)}`
+    );
+    addLoadingWithIframe(
+      document.getElementById('twForm'),
+      url => `/download_twitter?url=${encodeURIComponent(url)}`
+    );
+    addLoadingWithIframe(
+      document.getElementById('fbForm'),
+      url => `/download_facebook?url=${encodeURIComponent(url)}`
+    );
+    addLoadingWithIframe(
+      document.getElementById('ttForm'),
+      url => `/download_tiktok?url=${encodeURIComponent(url)}`
+    );
+
+    // "Other" probe button
+    const probeBtn = document.getElementById('probeBtn');
+    const probeOrig = probeBtn.textContent;
+    probeBtn.addEventListener('click', async () => {
+      const url = document.getElementById('otherUrl').value.trim();
+      if (!url) return alert('Enter a URL');
+      probeBtn.disabled = true;
+      probeBtn.classList.add('loading');
+      probeBtn.textContent = '';
+      try {
+        const res = await fetch(`/probe_other?url=${encodeURIComponent(url)}`);
+        const vids = await res.json();
+        const list = vids.length
+          ? vids.map(v => `<div><a href=\"/download_other?url=${encodeURIComponent(v)}\">${v}</a></div>`).join('')
+          : `<p>No <video> or <source> tags found.</p>`;
+        document.getElementById('videoList').innerHTML = list;
+      } catch (e) {
+        alert('Probe error: ' + e);
+      } finally {
+        // guarantee indicator shows at least 3s
+        setTimeout(() => {
+          probeBtn.disabled = false;
+          probeBtn.classList.remove('loading');
+          probeBtn.textContent = probeOrig;
+        }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>

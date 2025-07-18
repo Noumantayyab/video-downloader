@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Profile Picture Resizer</title>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 2em auto; }
+    label, select, input, button { display: block; width: 100%; margin-bottom: 1em; }
+    select, input { padding: .5em; font-size: 1em; }
+    button { padding: .75em; font-size: 1em; cursor: pointer; }
+    .error { color: red; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Profile Picture Resizer</h1>
+
+  <label for="fileInput">Upload your image:</label>
+  <input type="file" id="fileInput" accept="image/*"/>
+
+  <label for="platform">Select a platform:</label>
+  <select id="platform">
+    <option value="facebook">Facebook (360×360)</option>
+    <option value="whatsapp">WhatsApp (500×500)</option>
+    <option value="instagram">Instagram (320×320)</option>
+    <option value="linkedin">LinkedIn (400×400)</option>
+  </select>
+
+  <button id="resizeBtn">Resize & Download</button>
+  <div id="message" class="error"></div>
+
+  <script>
+    const resizeBtn = document.getElementById('resizeBtn');
+    const fileInput = document.getElementById('fileInput');
+    const platform  = document.getElementById('platform');
+    const message   = document.getElementById('message');
+
+    resizeBtn.onclick = async () => {
+      message.textContent = '';   // clear previous
+      if (!fileInput.files.length) {
+        return message.textContent = 'Please upload an image.';
+      }
+
+      const form = new FormData();
+      form.append('file', fileInput.files[0]);
+      form.append('platform', platform.value);
+
+      let res;
+      try {
+        res = await fetch('/resize_profile', { method: 'POST', body: form });
+      } catch (networkErr) {
+        return message.textContent = 'Network error: ' + networkErr.message;
+      }
+
+      if (!res.ok) {
+        let errDetail = 'Unknown error';
+        try {
+          const errJson = await res.json();
+          errDetail = errJson.detail || JSON.stringify(errJson);
+        } catch {
+          errDetail = await res.text();
+        }
+        return message.textContent = 'Resize failed: ' + errDetail;
+      }
+
+      // success: download the blob
+      const blob = await res.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `profile_${platform.value}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    };
+  </script>
+</body>
+</html>
