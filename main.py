@@ -39,7 +39,7 @@ def home():
 
     idx = STATIC_DIR / "index.html"
     if not idx.exists():
-        raise HTTPException(status_code=500, detail="index.html not found")
+        raise HTTPException(status_code=500, detail="index.html not found hahah")
     # Force UTF-8 decoding of your CSS-rich HTML
     return idx.read_text(encoding="utf-8")
 
