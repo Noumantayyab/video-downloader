@@ -6,7 +6,7 @@ import requests
 
 from pathlib import Path
 from urllib.parse import urljoin
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.responses import FileResponse, HTMLResponse
 from starlette.background import BackgroundTask
 from bs4 import BeautifulSoup
@@ -36,12 +36,18 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/", response_class=HTMLResponse)
 def home():
+
     idx = STATIC_DIR / "index.html"
     if not idx.exists():
         raise HTTPException(status_code=500, detail="index.html not found")
     # Force UTF-8 decoding of your CSS-rich HTML
     return idx.read_text(encoding="utf-8")
 
+@app.get("/api/v1/health", response_class=HTMLResponse)
+def health():
+    
+ return Response({"health" :"okay"})
+    
 
 
 def serve_and_cleanup(path: str):

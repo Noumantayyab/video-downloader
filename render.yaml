@@ -1,0 +1,31 @@
+services:
+  # Main web service
+  - type: web
+    name: fastapi-app
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: 8000
+      # PostgreSQL connection - set POSTGRES_URL manually in Render dashboard
+      # with your cloud database URL (e.g., from AWS RDS, Google Cloud SQL, etc.)
+      
+  
+
+  # Background worker service
+  - type: worker
+    name: fastapi-worker
+    runtime: docker
+    dockerCommand: arq src.app.core.worker.settings.WorkerSettings
+    plan: starter
+    envVars:
+      # Same environment variables as web service
+      - key: ENVIRONMENT
+        value: production
+      # PostgreSQL connection - set POSTGRES_URL manually in Render dashboard
+      # with your cloud database URL (e.g., from AWS RDS, Google Cloud SQL, etc.)
+      
+      
