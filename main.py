@@ -89,13 +89,15 @@ def download_youtube(url: str = Query(..., description="YouTube video URL")):
 @app.get("/download_instagram")
 def download_instagram(url: str = Query(..., description="Instagram video URL")):
     temp = DOWNLOAD_DIR / f"{uuid.uuid4()}.%(ext)s"
+    cookies_path = BASE_DIR / "cookies" / "instagram_cookies.txt"
+
     ydl_opts = {
         "format": "best[ext=mp4]/best",
         "outtmpl": str(temp),
         "quiet": True,
         "no_warnings": True,
         "nocheckcertificate": True,
-        "cookiesfrombrowser": ("chrome",),  # <-- tries to load cookies from local browser
+        "cookiefile": str(cookies_path),
         "http_headers": {
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -112,7 +114,9 @@ def download_instagram(url: str = Query(..., description="Instagram video URL"))
             fn = ydl.prepare_filename(info)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Instagram error: {e}")
+
     return serve_and_cleanup(fn)
+
 
 
 
