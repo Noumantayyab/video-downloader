@@ -105,6 +105,7 @@ def download_instagram(url: str = Query(..., description="Instagram video URL"))
     return serve_and_cleanup(fn)
 
 
+
 @app.get("/download_twitter")
 def download_twitter(url: str = Query(..., description="X (Twitter) video URL")):
     temp = DOWNLOAD_DIR / f"{uuid.uuid4()}.%(ext)s"
