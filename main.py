@@ -95,14 +95,25 @@ def download_instagram(url: str = Query(..., description="Instagram video URL"))
         "quiet": True,
         "no_warnings": True,
         "nocheckcertificate": True,
+        "cookiesfrombrowser": ("chrome",),  # <-- tries to load cookies from local browser
+        "http_headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/114.0.0.0 Safari/537.36"
+            ),
+            "Accept-Language": "en-US,en;q=0.9",
+        },
     }
+
     try:
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            fn   = ydl.prepare_filename(info)
+            fn = ydl.prepare_filename(info)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Instagram error: {e}")
     return serve_and_cleanup(fn)
+
 
 
 
