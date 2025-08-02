@@ -105,20 +105,24 @@
   </div>
 
   <!-- YouTube -->
-  <div id="youtube" class="pane active">
-    <form id="ytForm">
-      <input type="text" id="ytUrl" placeholder="Paste YouTube URL here" />
-      <button type="submit">Download</button>
-    </form>
-  </div>
+<div id="youtube" class="pane active">
+  <form id="ytForm">
+    <input type="text" id="ytUrl" placeholder="Paste YouTube URL here" />
+    <button type="submit">Preview</button>
+  </form>
+  <div id="ytPlayer" style="margin-top:1em;"></div>
+</div>
 
-  <!-- Instagram -->
-  <div id="instagram" class="pane">
-    <form id="igForm">
-      <input type="text" id="igUrl" placeholder="Paste Instagram URL here" />
-      <button type="submit">Download</button>
-    </form>
-  </div>
+
+<!-- Instagram -->
+<div id="instagram" class="pane">
+  <form id="igForm">
+    <input type="text" id="igUrl" placeholder="Paste Instagram URL here" />
+    <button type="submit">Preview</button>
+  </form>
+  <div id="igPlayer" style="margin-top:1em;"></div>
+</div>
+
 
   <!-- Twitter/X -->
   <div id="twitter" class="pane">
@@ -195,8 +199,36 @@
     }
 
     // Attach to each
-    wireDownload('ytForm',     u => `/download?url=${encodeURIComponent(u)}`);
-    wireDownload('igForm',     u => `/download_instagram?url=${encodeURIComponent(u)}`);
+   // YouTube preview handler
+document.getElementById('ytForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const url = document.getElementById('ytUrl').value.trim();
+  if (!url) return alert('Please enter a URL');
+
+  const videoSrc = `/download?url=${encodeURIComponent(url)}`;
+  const player = `
+    <video controls width="640" style="max-width:100%">
+      <source src="${videoSrc}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>`;
+  document.getElementById('ytPlayer').innerHTML = player;
+});
+
+// Instagram preview handler
+document.getElementById('igForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const url = document.getElementById('igUrl').value.trim();
+  if (!url) return alert('Please enter a URL');
+
+  const videoSrc = `/download_instagram?url=${encodeURIComponent(url)}`;
+  const player = `
+    <video controls width="640" style="max-width:100%">
+      <source src="${videoSrc}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>`;
+  document.getElementById('igPlayer').innerHTML = player;
+});
+
     wireDownload('twForm',     u => `/download_twitter?url=${encodeURIComponent(u)}`);
     wireDownload('fbForm',     u => `/download_facebook?url=${encodeURIComponent(u)}`);
     wireDownload('ttForm',     u => `/download_tiktok?url=${encodeURIComponent(u)}`);
